@@ -8,9 +8,9 @@ class Game {
     this.leader1 = createElement("h2");
     this.leader2 = createElement("h2");
     this.playerMoving = false;
-
     this.leftKeyActive = false;
-    this.blast = false; //C42//SA
+    this.blast = false;
+
   }
 
   getState() {
@@ -34,29 +34,22 @@ class Game {
 
     car1 = createSprite(width / 2 - 50, height - 100);
     car1.addImage("car1", car1_img);
+    car1.addImage('blast',blastImage);
     car1.scale = 0.07;
-
-    car1.addImage("blast", blastImage); //C42 //SA
+    
 
     car2 = createSprite(width / 2 + 100, height - 100);
     car2.addImage("car2", car2_img);
     car2.scale = 0.07;
-
-    car2.addImage("blast", blastImage); //C42//SA
+    car2.addImage('blast',blastImage);
 
     cars = [car1, car2];
 
     fuels = new Group();
     powerCoins = new Group();
-    obstacles = new Group(); //C41 //SA
 
-    // Adding fuel sprite in the game
-    this.addSprites(fuels, 4, fuelImage, 0.02);
+    obstacles = new Group();
 
-    // Adding coin sprite in the game
-    this.addSprites(powerCoins, 18, powerCoinImage, 0.09);
-
-    //C41 //BP //SA
     var obstaclesPositions = [
       { x: width / 2 + 250, y: height - 800, image: obstacle2Image },
       { x: width / 2 - 150, y: height - 1300, image: obstacle1Image },
@@ -72,6 +65,12 @@ class Game {
       { x: width / 2 - 180, y: height - 5500, image: obstacle2Image }
     ];
 
+    // Adding fuel sprite in the game
+    this.addSprites(fuels, 4, fuelImage, 0.02);
+
+    // Adding coin sprite in the game
+    this.addSprites(powerCoins, 18, powerCoinImage, 0.09);
+
     //Adding obstacles sprite in the game
     this.addSprites(
       obstacles,
@@ -82,7 +81,6 @@ class Game {
     );
   }
 
-  //C41 //SA
   addSprites(spriteGroup, numberOfSprites, spriteImage, scale, positions = []) {
     for (var i = 0; i < numberOfSprites; i++) {
       var x, y;
@@ -109,6 +107,7 @@ class Game {
     form.titleImg.position(40, 50);
     form.titleImg.class("gameTitleAfterEffect");
 
+    //C39
     this.resetTitle.html("Reset Game");
     this.resetTitle.class("resetText");
     this.resetTitle.position(width / 2 + 200, 40);
@@ -151,12 +150,11 @@ class Game {
         var x = allPlayers[plr].positionX;
         var y = height - allPlayers[plr].positionY;
 
-        //C42//TA
         var currentlife = allPlayers[plr].life;
-
-        if (currentlife <= 0) {
-          cars[index - 1].changeImage("blast");
-          cars[index - 1].scale = 0.3;
+        
+        if(currentlife <=0){
+          cars[index-1].changeImage('blast');
+          cars[index-1].scale = 0.3;
         }
 
         cars[index - 1].position.x = x;
@@ -169,17 +167,16 @@ class Game {
 
           this.handleFuel(index);
           this.handlePowerCoins(index);
-          this.handleCarACollisionWithCarB(index); //C41//BP//TA
-          this.handleObstacleCollision(index); //C41//SA
-
-          //C42//TA
-          if (player.life <= 0) {
-            this.blast = true;
-            this.playerMoving = false;
-          }
+          this.handleObstacleCollision(index);
+          this.handlecarAcollisonwithcarB(index);
 
           // Changing camera position in y direction
           camera.position.y = cars[index - 1].position.y;
+
+          if(player.life <= 0){
+            this.blast = true;
+            this.playerMoving = false;
+          }
         }
       }
 
@@ -206,57 +203,16 @@ class Game {
     }
   }
 
-  handleFuel(index) {
-    // Adding fuel
-    cars[index - 1].overlap(fuels, function(collector, collected) {
-      player.fuel = 185;
-      //collected is the sprite in the group collectibles that triggered
-      //the event
-      collected.remove();
-    });
-
-    // Reducing Player car fuel
-    if (player.fuel > 0 && this.playerMoving) {
-      player.fuel -= 0.3;
-    }
-
-    if (player.fuel <= 0) {
-      gameState = 2;
-      this.gameOver();
-    }
-  }
-
-  handlePowerCoins(index) {
-    cars[index - 1].overlap(powerCoins, function(collector, collected) {
-      player.score += 21;
-      player.update();
-      //collected is the sprite in the group collectibles that triggered
-      //the event
-      collected.remove();
-    });
-  }
-
   handleResetButton() {
     this.resetButton.mousePressed(() => {
       database.ref("/").set({
-        carsAtEnd: 0,
         playerCount: 0,
         gameState: 0,
-        palyers: {}
+        players: {},
+        carsAtEnd: 0
       });
       window.location.reload();
     });
-  }
-
-  showFuelBar() {
-    push();
-    image(fuelImage, width / 2 - 130, height - player.positionY - 350, 20, 20);
-    fill("white");
-    rect(width / 2 - 100, height - player.positionY - 350, 185, 20);
-    fill("#ffc400");
-    rect(width / 2 - 100, height - player.positionY - 350, player.fuel, 20);
-    noStroke();
-    pop();
   }
 
   showLife() {
@@ -266,6 +222,17 @@ class Game {
     rect(width / 2 - 100, height - player.positionY - 400, 185, 20);
     fill("#f50057");
     rect(width / 2 - 100, height - player.positionY - 400, player.life, 20);
+    noStroke();
+    pop();
+  }
+
+  showFuelBar() {
+    push();
+    image(fuelImage, width / 2 - 130, height - player.positionY - 350, 20, 20);
+    fill("white");
+    rect(width / 2 - 100, height - player.positionY - 350, 185, 20);
+    fill("#ffc400");
+    rect(width / 2 - 100, height - player.positionY - 350, player.fuel, 20);
     noStroke();
     pop();
   }
@@ -314,81 +281,102 @@ class Game {
   }
 
   handlePlayerControls() {
-    //C41 //TA
-    if (!this.blast) {
-      if (keyIsDown(UP_ARROW)) {
-        this.playerMoving = true;
-        player.positionY += 10;
-        player.update();
-      }
+    if(!this.blast){
+    if (keyIsDown(UP_ARROW)) {
+      this.playerMoving = true;
+      player.positionY += 10;
+      player.update();
+    }
 
-      if (keyIsDown(LEFT_ARROW) && player.positionX > width / 3 - 50) {
-        this.leftKeyActive = true;
-        player.positionX -= 5;
-        player.update();
-      }
+    if (keyIsDown(LEFT_ARROW) && player.positionX > width / 3 - 50) {
+      this.leftKeyActive = true;
+      player.positionX -= 5;
+      player.update();
+    }
 
-      if (keyIsDown(RIGHT_ARROW) && player.positionX < width / 2 + 300) {
-        this.leftKeyActive = false;
-        player.positionX += 5;
-        player.update();
-      }
+    if (keyIsDown(RIGHT_ARROW) && player.positionX < width / 2 + 300) {
+      this.leftKeyActive = false;
+      player.positionX += 5;
+      player.update();
+    }
+  }
+}
+
+handlecarAcollisonwithcarB(index){
+if(index === 1) {
+  if(cars[index-1].collide(cars[1])){
+    if(this.leftKeyActive){
+      player.positionX += 100;
+    }else{
+      player.positionX -= 100;
+    }
+  if(player.life > 0){
+    player.life -= 185/4;
+  }
+  player.update();
+}
+}
+
+if(index === 2){
+  if(cars[index-1].collide(cars[0])){
+    if(this.leftKeyActive){
+      player.positionX += 100;
+    }else{
+      player.positionX -= 100;
+    }
+  if(player.life > 0){
+    player.life -= 185/4;
+  }
+  player.update();
+}
+}
+}
+
+
+  handleFuel(index) {
+    // Adding fuel
+    cars[index - 1].overlap(fuels, function(collector, collected) {
+      player.fuel = 185;
+      //collected is the sprite in the group collectibles that triggered
+      //the event
+      collected.remove();
+    });
+
+    // Reducing Player car fuel
+    if (player.fuel > 0 && this.playerMoving) {
+      player.fuel -= 0.3;
+    }
+
+    if (player.fuel <= 0) {
+      gameState = 2;
+      this.gameOver();
     }
   }
 
-  //C41 //SA
+  handlePowerCoins(index) {
+    cars[index - 1].overlap(powerCoins, function(collector, collected) {
+      player.score += 21;
+      player.update();
+      //collected is the sprite in the group collectibles that triggered
+      //the event
+      collected.remove();
+    });
+  }
+
   handleObstacleCollision(index) {
     if (cars[index - 1].collide(obstacles)) {
-      //C41 //TA
       if (this.leftKeyActive) {
         player.positionX += 100;
       } else {
         player.positionX -= 100;
       }
 
-      //C41 //SA
       //Reducing Player Life
       if (player.life > 0) {
         player.life -= 185 / 4;
       }
 
       player.update();
-    }
-  }
-
-  //C41 //TA //Bp
-  handleCarACollisionWithCarB(index) {
-    if (index === 1) {
-      if (cars[index - 1].collide(cars[1])) {
-        if (this.leftKeyActive) {
-          player.positionX += 100;
-        } else {
-          player.positionX -= 100;
-        }
-
-        //Reducing Player Life
-        if (player.life > 0) {
-          player.life -= 185 / 4;
-        }
-
-        player.update();
-      }
-    }
-    if (index === 2) {
-      if (cars[index - 1].collide(cars[0])) {
-        if (this.leftKeyActive) {
-          player.positionX += 100;
-        } else {
-          player.positionX -= 100;
-        }
-
-        //Reducing Player Life
-        if (player.life > 0) {
-          player.life -= 185 / 4;
-        }
-
-        player.update();
-      }
     }
   }
 
@@ -413,7 +401,10 @@ class Game {
       confirmButtonText: "Thanks For Playing"
     });
   }
-  end() {
-    console.log("Game Over");
+  
+  end(){
+    console.log('Game Over')
   }
 }
+
+
